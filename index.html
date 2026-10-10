@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartografía Digital y Gestión de Riesgos | Ejido Mochis</title>
+    
+    <!-- Meta descripción SEO -->
+    <meta name="description" content="Sistema de Información Geográfica Comunitario y Mapa de Riesgos para el Ejido Mochis, Sinaloa. Visualización de puntos clave y zonas vulnerables.">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS vía CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin="" />
+
+    <style>
+        /* Estilos base y reseteo */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body, html {
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #0f172a;
+            color: #1e293b;
+        }
+
+        /* Contenedor del Mapa al 100% de la pantalla */
+        #map {
+            width: 100vw;
+            height: 100vh;
+            z-index: 1;
+        }
+
+        /* Panel Superior Flotante (Header Glassmorphism) */
+        .header-panel {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 16px 22px;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            max-width: 440px;
+            pointer-events: auto;
+            transition: all 0.3s ease;
+        }
+
+        .header-title-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .header-logo-icon {
+            font-size: 26px;
+            background: #e0f2fe;
+            border-radius: 10px;
+            padding: 4px 8px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-panel h1 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: #0f172a;
+            line-height: 1.25;
+        }
+
+        .header-panel p {
+            font-size: 0.82rem;
+            color: #64748b;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+
+        /* Barra de Estadísticas y Contadores */
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            margin-top: 14px;
+            padding-top: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .stat-item {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f8fafc;
+            padding: 6px 10px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .stat-number {
+            font-weight: 700;
+            font-size: 1rem;
+            color: #0f172a;
+        }
+
+        .stat-label {
+            font-size: 0.72rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        /* Panel Flotante de Leyenda (Esquina Inferior Izquierda) */
+        .legend-panel {
+            position: absolute;
+            bottom: 25px;
+            left: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.92);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 14px 18px;
+            border-radius: 14px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            font-size: 0.82rem;
+            pointer-events: auto;
+        }
+
+        .legend-title {
+            font-weight: 700;
+            font-size: 0.85rem;
+            color: #1e293b;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .legend-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 14px;
+            height: 14px;
+            border-radius: 4px;
+            display: inline-block;
+        }
+
+        .legend-symbol {
+            font-size: 14px;
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Botón de Recentrar */
+        .btn-recenter {
+            position: absolute;
+            bottom: 25px;
+            right: 20px;
+            z-index: 1000;
+            background: #ffffff;
+            color: #0f172a;
+            border: 1px solid #cbd5e1;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.12);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-recenter:hover {
+            background: #f1f5f9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.18);
+        }
+
+        /* Banner informativo modo local (se oculta automáticamente si hay backend) */
+        #local-data-banner {
+            display: none;
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            z-index: 1000;
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fde68a;
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 0.78rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+        }
+
+        /* Popups estilizados para Leaflet */
+        .leaflet-popup-content-wrapper {
+            border-radius: 14px;
+            padding: 4px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+            font-family: 'Inter', sans-serif;
+        }
+
+        .leaflet-popup-content {
+            margin: 12px 14px;
+            line-height: 1.4;
+        }
+
+        .popup-card {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .popup-title {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #0f172a;
+            margin-top: 2px;
+        }
+
+        .popup-desc {
+            font-size: 0.8rem;
+            color: #475569;
+            margin-top: 4px;
+        }
+
+        .popup-footer {
+            margin-top: 8px;
+            padding-top: 6px;
+            border-top: 1px solid #f1f5f9;
+            font-size: 0.72rem;
+            color: #94a3b8;
+        }
+
+        /* Badges de Categoría y Riesgo */
+        .badge {
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 3px 8px;
+            border-radius: 6px;
+            letter-spacing: 0.4px;
+            display: inline-block;
+        }
+
+        .badge-educacion { background: #dbeafe; color: #1e40af; }
+        .badge-salud { background: #d1fae5; color: #065f46; }
+        .badge-comercio { background: #fef3c7; color: #92400e; }
+        .badge-riesgo-alto { background: #fee2e2; color: #991b1b; }
+        .badge-riesgo-medio { background: #ffedd5; color: #9a3412; }
+
+        /* Responsividad Móvil */
+        @media (max-width: 640px) {
+            .header-panel {
+                top: 12px;
+                left: 12px;
+                right: 12px;
+                max-width: none;
+                padding: 12px 16px;
+            }
+            .header-panel h1 { font-size: 1rem; }
+            .header-panel p { font-size: 0.75rem; }
+            .legend-panel {
+                bottom: 20px;
+                left: 12px;
+                padding: 10px 14px;
+            }
+            .btn-recenter {
+                bottom: 20px;
+                right: 12px;
+                padding: 8px 12px;
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Panel Superior Flotante: Identidad Institucional -->
+    <header class="header-panel">
+        <div class="header-title-row">
+            <span class="header-logo-icon">🗺️</span>
+            <div>
+                <h1>Cartografía Digital y Riesgos</h1>
+                <p>Ejido Mochis, Ahome, Sinaloa &bull; Sistema Comunitario SIG</p>
+            </div>
+        </div>
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-number" id="count-puntos">0</span>
+                <span class="stat-label">Puntos Clave</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-number" id="count-zonas">0</span>
+                <span class="stat-label">Zonas Riesgo</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Banner Modo Vista Previa / Local -->
+    <div id="local-data-banner">
+        ℹ️ Modo Demostración Activo (Configura <code>api/conexion.php</code> en InfinityFree)
+    </div>
+
+    <!-- Contenedor Principal del Mapa -->
+    <main id="map"></main>
+
+    <!-- Panel de Leyenda Interactiva -->
+    <aside class="legend-panel">
+        <div class="legend-title">Leyenda Cartográfica</div>
+        <ul class="legend-list">
+            <li class="legend-item">
+                <span class="legend-symbol">🎓</span>
+                <span>Educación</span>
+            </li>
+            <li class="legend-item">
+                <span class="legend-symbol">🏥</span>
+                <span>Salud y Auxilio</span>
+            </li>
+            <li class="legend-item">
+                <span class="legend-symbol">🏪</span>
+                <span>Comercio y Abasto</span>
+            </li>
+            <li class="legend-item">
+                <span class="legend-color" style="background: rgba(239, 68, 68, 0.6); border: 1px solid #dc2626;"></span>
+                <span>Riesgo Alto (Inundación / Talud)</span>
+            </li>
+            <li class="legend-item">
+                <span class="legend-color" style="background: rgba(245, 158, 11, 0.6); border: 1px dashed #d97706;"></span>
+                <span>Riesgo Medio (Tráfico vial)</span>
+            </li>
+        </ul>
+    </aside>
+
+    <!-- Botón para Recentrar -->
+    <button class="btn-recenter" onclick="centrarMapa()" title="Centrar mapa en Ejido Mochis">
+        🎯 Centrar Ejido
+    </button>
+
+    <!-- Leaflet JS vía CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+
+    <!-- Lógica del Mapa -->
+    <script src="js/mapa.js"></script>
+</body>
+</html>
