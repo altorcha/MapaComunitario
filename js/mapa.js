@@ -19,10 +19,10 @@ const mapa = L.map('map', {
 // Control de zoom en posición superior derecha
 L.control.zoom({ position: 'topright' }).addTo(mapa);
 
-// 3. Capa Base de Mapa (OpenStreetMap en alta resolución)
-const capaOSM = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+// 3. Capas Base de Mapa (Servidores Esri ArcGIS Online - 100% libres, sin API Key ni bloqueos 403)
+const capaCalles = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
     maxZoom: 19,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors | Ejido Mochis SIG'
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, DeLorme, NAVTEQ, USGS, Intermap, iPC, NRCAN, METI, TomTom | Ejido Mochis SIG'
 }).addTo(mapa);
 
 // Capa Satelital Alternativa (Esri World Imagery)
@@ -31,14 +31,21 @@ const capaSatelite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/se
     attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community'
 });
 
+// Capa Topográfica Alternativa (Esri World Topo Map)
+const capaTopo = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}', {
+    maxZoom: 19,
+    attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ, TomTom, Intermap, iPC, USGS, FAO, NPS, NRCAN, GeoBase'
+});
+
 // Grupos de capas para organización y filtro dinámico
 const grupoPuntos = L.layerGroup().addTo(mapa);
 const grupoZonas = L.layerGroup().addTo(mapa);
 
 // Control de capas para alternar mapas y capas
 const mapasBase = {
-    "Mapa Callejero": capaOSM,
-    "Vista Satelital": capaSatelite
+    "Mapa Callejero": capaCalles,
+    "Vista Satelital": capaSatelite,
+    "Mapa Topográfico": capaTopo
 };
 const capasSuperpuestas = {
     "Puntos de Interés": grupoPuntos,
