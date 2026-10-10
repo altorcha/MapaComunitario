@@ -6,7 +6,7 @@
  */
 
 // 1. Coordenadas centrales de referencia para el Ejido Mochis, Sinaloa
-const CENTRO_EJIDO = [25.8200, -109.0400];
+const CENTRO_EJIDO = [25.827249624521258, -109.05141299774476];
 const ZOOM_INICIAL = 15;
 
 // 2. Inicialización del Mapa con Leaflet
