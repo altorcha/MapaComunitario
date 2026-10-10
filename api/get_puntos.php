@@ -10,11 +10,15 @@ header('Access-Control-Allow-Origin: *');
 require_once __DIR__ . '/conexion.php';
 
 try {
-    $sql = "SELECT id, nombre, categoria, latitud, longitud, descripcion FROM puntos_interes ORDER BY id ASC";
+    if (!$pdo) {
+        throw new PDOException("No hay conexión activa a la base de datos MySQL.");
+    }
+
+    $sql = "SELECT id, nombre, categoria, latitud, longitud, descripcion, horario, direccion, telefono FROM puntos_interes ORDER BY id ASC";
     $stmt = $pdo->query($sql);
     $puntos = $stmt->fetchAll();
 
-    // Asegurar tipos de datos adecuados para Leaflet
+    // Asegurar tipos de datos adecuados para Leaflet y la interfaz
     $resultado = array_map(function ($punto) {
         return [
             'id'          => (int)$punto['id'],
@@ -22,7 +26,10 @@ try {
             'categoria'   => strtolower(trim($punto['categoria'])),
             'latitud'     => (float)$punto['latitud'],
             'longitud'    => (float)$punto['longitud'],
-            'descripcion' => $punto['descripcion'] ?? ''
+            'descripcion' => $punto['descripcion'] ?? '',
+            'horario'     => $punto['horario'] ?? 'Horario no especificado',
+            'direccion'   => $punto['direccion'] ?? 'Ejido Mochis, Sinaloa',
+            'telefono'    => $punto['telefono'] ?? ''
         ];
     }, $puntos);
 
@@ -36,7 +43,7 @@ try {
     http_response_code(500);
     echo json_encode([
         'status'  => 'error',
-        'mensaje' => 'Error al consultar puntos de interés: ' . $e->getMessage()
+        'mensaje' => 'Error al consultar comercios y puntos de interés: ' . $e->getMessage()
     ], JSON_UNESCAPED_UNICODE);
 }
 ?>
