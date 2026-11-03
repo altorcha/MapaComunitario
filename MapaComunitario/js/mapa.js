@@ -3,7 +3,10 @@
  * Directorio Comercial y de Servicios - Ejido Mochis
  * Archivo: js/mapa.js
  * Codificación: UTF-8 sin BOM
- * Comportamiento: Las ubicaciones SOLO aparecen al seleccionar un negocio
+ * Comportamiento: 
+ *   - Búsqueda inteligente insensible a acentos/tildes
+ *   - Búsqueda exacta por domicilio, calle y entrecalles
+ *   - Las ubicaciones en mapa SOLO aparecen al seleccionar un negocio
  * ========================================================
  */
 
@@ -322,14 +325,59 @@ function crearMarcadoresPuntos() {
 }
 
 // ========================================================
-// 6. Renderizado de Secciones Comerciales en Directorio
+// 6. Normalización y Motor de Búsqueda Inteligente (Sin importar acentos)
 // ========================================================
+
+/**
+ * Normaliza cualquier texto eliminando acentos, tildes y diacríticos
+ * Ej: "Ávila", "ávila" -> "avila" | "Ferretería" -> "ferreteria" | "Colón" -> "colon"
+ */
+function normalizarTextoBusqueda(texto) {
+    if (!texto) return '';
+    return texto
+        .toString()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remueve marcas de acentuación
+        .toLowerCase()
+        .trim();
+}
+
+/**
+ * Evalúa si un negocio coincide con la búsqueda introducida.
+ * Permite buscar por nombre, domicilio, calle principal, entrecalles, referencia o giro
+ * sin importar si el usuario escribe con o sin acentos.
+ */
+function coincideBusqueda(punto, textoBusqueda) {
+    const consultaNormalizada = normalizarTextoBusqueda(textoBusqueda);
+    if (!consultaNormalizada) return true;
+
+    // Indexación de todos los campos relevantes para dar con el domicilio y negocio
+    const camposIndexados = [
+        punto.nombre,
+        punto.direccion,    // Calle, número, entrecalles
+        punto.referencia,   // Puntos de referencia barrial
+        punto.subcategoria, // Giro comercial
+        punto.servicios,    // Productos y servicios
+        punto.descripcion
+    ];
+
+    const textoCompleto = normalizarTextoBusqueda(camposIndexados.filter(Boolean).join(' '));
+
+    // Dividir los términos de búsqueda en palabras individuales
+    const terminos = consultaNormalizada.split(/\s+/).filter(Boolean);
+
+    // Todas las palabras escritas deben estar presentes en el negocio o su domicilio
+    return terminos.every(termino => textoCompleto.includes(termino));
+}
+
 function renderizarModuloSecciones() {
     const contenedor = document.getElementById('drawer-sections-container');
     if (!contenedor) return;
 
     contenedor.innerHTML = '';
-    const textoFiltro = (document.getElementById('gmap-search-input')?.value || '').toLowerCase().trim();
+    const textoFiltro = (document.getElementById('gmap-search-input')?.value || '').trim();
+
+    let totalCoincidencias = 0;
 
     SECCIONES_COMERCIALES.forEach((seccion, index) => {
         if (categoriaActiva !== 'todos' && categoriaActiva !== seccion.id) {
@@ -339,14 +387,10 @@ function renderizarModuloSecciones() {
         const itemsDeSeccion = todosLosPuntos.filter(p => {
             const coincideSeccion = seccion.filtro(p);
             if (!coincideSeccion) return false;
-            if (!textoFiltro) return true;
-            return (p.nombre || '').toLowerCase().includes(textoFiltro) || 
-                   (p.descripcion || '').toLowerCase().includes(textoFiltro) || 
-                   (p.subcategoria || '').toLowerCase().includes(textoFiltro) ||
-                   (p.servicios || '').toLowerCase().includes(textoFiltro) ||
-                   (p.direccion || '').toLowerCase().includes(textoFiltro) ||
-                   (p.referencia || '').toLowerCase().includes(textoFiltro);
+            return coincideBusqueda(p, textoFiltro);
         });
+
+        totalCoincidencias += itemsDeSeccion.length;
 
         if (itemsDeSeccion.length === 0 && textoFiltro) return;
 
@@ -376,7 +420,7 @@ function renderizarModuloSecciones() {
         const cardsContainer = secDiv.querySelector(`#cards-list-${seccion.id}`);
 
         if (itemsDeSeccion.length === 0) {
-            cardsContainer.innerHTML = `<p style="padding: 12px; font-size: 13px; color: #5f6368;">No hay establecimientos registrados en esta categoría.</p>`;
+            cardsContainer.innerHTML = `<p style="padding: 12px; font-size: 13px; color: #5f6368;">No hay establecimientos en esta categoría.</p>`;
         } else {
             itemsDeSeccion.forEach(item => {
                 cardsContainer.appendChild(crearTarjetaPunto(item));
@@ -385,6 +429,20 @@ function renderizarModuloSecciones() {
 
         contenedor.appendChild(secDiv);
     });
+
+    if (totalCoincidencias === 0 && textoFiltro) {
+        contenedor.innerHTML = `
+            <div style="padding: 30px 18px; text-align: center; color: var(--gm-text-sub);">
+                <div style="margin-bottom: 12px; color: var(--gm-text-muted); display: flex; justify-content: center;">
+                    ${ICONOS_SVG.ubicacion}
+                </div>
+                <h4 style="font-size: 15px; font-weight: 600; color: var(--gm-text-main); margin-bottom: 6px;">Sin resultados encontrados</h4>
+                <p style="font-size: 13px; line-height: 1.45;">No se encontraron comercios ni domicilios para "<strong>${textoFiltro}</strong>". Intenta buscar por calle (ej: <em>16 de Septiembre, Ávila Camacho, Carranza, Madero, Colón</em>) o giro comercial.</p>
+            </div>
+        `;
+    }
+
+    actualizarContadores(textoFiltro ? totalCoincidencias : null);
 }
 
 function alternarAcordeon(secId) {
@@ -711,11 +769,15 @@ function resaltarTarjetaEnDirectorio(id) {
     }
 }
 
-function actualizarContadores() {
+function actualizarContadores(totalFiltrados = null) {
     const totalPuntos = todosLosPuntos.length;
     const badge = document.getElementById('total-count-badge');
     if (badge) {
-        badge.textContent = `${totalPuntos} Establecimientos`;
+        if (totalFiltrados !== null && totalFiltrados !== totalPuntos) {
+            badge.textContent = `${totalFiltrados} de ${totalPuntos} encontrados`;
+        } else {
+            badge.textContent = `${totalPuntos} Establecimientos`;
+        }
     }
 }
 
@@ -888,15 +950,35 @@ function configurarEventosUI() {
         window.addEventListener('resize', actualizarEstadoFlechasChips);
     }
 
-    // Buscador interactivo
+    // Buscador interactivo inteligente
     const searchInput = document.getElementById('gmap-search-input');
     const btnClearSearch = document.getElementById('btn-clear-search');
+    const btnSearchTrigger = document.getElementById('btn-search-trigger');
 
     if (searchInput) {
         searchInput.oninput = () => {
             volverADirectorio();
             const val = searchInput.value.trim();
             if (btnClearSearch) btnClearSearch.style.display = val.length > 0 ? 'flex' : 'none';
+            renderizarModuloSecciones();
+            filtrarMarcadoresEnMapa();
+        };
+
+        // Si el usuario presiona Enter y hay resultados, enfocar el primero automáticamente
+        searchInput.onkeydown = (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                const primerResultado = document.querySelector('.place-card');
+                if (primerResultado) {
+                    primerResultado.click();
+                }
+            }
+        };
+    }
+
+    if (btnSearchTrigger && searchInput) {
+        btnSearchTrigger.onclick = () => {
+            searchInput.focus();
             renderizarModuloSecciones();
             filtrarMarcadoresEnMapa();
         };
@@ -949,9 +1031,18 @@ function configurarEventosUI() {
 }
 
 function filtrarMarcadoresEnMapa() {
-    // Al filtrar o buscar en el directorio, el mapa permanece limpio
-    // a menos que se seleccione expresamente un comercio
-    if (!puntoSeleccionadoActual) {
+    const textoFiltro = document.getElementById('gmap-search-input')?.value || '';
+    if (puntoSeleccionadoActual) {
+        let coincide = coincideBusqueda(puntoSeleccionadoActual, textoFiltro);
+        if (categoriaActiva !== 'todos') {
+            const seccion = SECCIONES_COMERCIALES.find(s => s.id === categoriaActiva);
+            if (seccion) coincide = coincide && seccion.filtro(puntoSeleccionadoActual);
+        }
+        if (!coincide) {
+            grupoPuntos.clearLayers();
+            puntoSeleccionadoActual = null;
+        }
+    } else {
         grupoPuntos.clearLayers();
     }
 }
