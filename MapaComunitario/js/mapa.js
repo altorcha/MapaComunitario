@@ -3,6 +3,7 @@
  * Directorio Comercial y de Servicios - Ejido Mochis
  * Archivo: js/mapa.js
  * Codificación: UTF-8 sin BOM
+ * Comportamiento: Las ubicaciones SOLO aparecen al seleccionar un negocio
  * ========================================================
  */
 
@@ -247,7 +248,7 @@ function crearIconoMarcadorSvg(punto) {
 }
 
 // ========================================================
-// 5. Carga de Datos y Construcción de Marcadores
+// 5. Carga de Datos y Registro de Marcadores en Memoria
 // ========================================================
 async function cargarPuntosDesdeServidor() {
     try {
@@ -268,7 +269,7 @@ async function cargarPuntosDesdeServidor() {
 }
 
 function crearMarcadoresPuntos() {
-    grupoPuntos.clearLayers();
+    // El mapa inicia limpio: no se agregan pines hasta que se seleccione un negocio
     marcadoresPuntos = [];
 
     todosLosPuntos.forEach(punto => {
@@ -315,7 +316,8 @@ function crearMarcadoresPuntos() {
         });
 
         marcadoresPuntos.push(marker);
-        grupoPuntos.addLayer(marker);
+        // NOTA CLAVE: NO se agrega a grupoPuntos aquí.
+        // La ubicación SOLO aparecerá en el mapa cuando el usuario seleccione el negocio.
     });
 }
 
@@ -452,6 +454,7 @@ function crearTarjetaPunto(punto) {
         </div>
     `;
 
+    // Al hacer clic en la tarjeta: mostrar en el mapa y abrir su ficha
     card.addEventListener('click', () => {
         enfocarPuntoEnMapa(punto.id);
         abrirFichaDetalle(punto);
@@ -466,6 +469,7 @@ function crearTarjetaPunto(punto) {
 function abrirFichaDetallePorId(id) {
     const punto = todosLosPuntos.find(p => p.id === id);
     if (punto) {
+        enfocarPuntoEnMapa(punto.id);
         abrirFichaDetalle(punto);
     }
 }
@@ -582,6 +586,12 @@ function volverADirectorio() {
     puntoSeleccionadoActual = null;
     actualizarUrlConNegocio(null);
 
+    // Limpiar marcadores del mapa: el mapa vuelve a quedar limpio
+    if (grupoPuntos) {
+        grupoPuntos.clearLayers();
+    }
+    document.querySelectorAll('.place-card').forEach(c => c.classList.remove('selected'));
+
     const sheet = document.getElementById('place-detail-sheet');
     const mainView = document.getElementById('drawer-main-view');
     if (sheet && mainView) {
@@ -665,11 +675,17 @@ function copiarFallback(texto, nombre) {
 }
 
 // ========================================================
-// 9. Interacción Mapa y Directorio
+// 9. Interacción Mapa y Directorio: MOSTRAR SOLO EL NEGOCIO SELECCIONADO
 // ========================================================
 function enfocarPuntoEnMapa(id) {
     const marker = marcadoresPuntos.find(m => m._datos.id === id);
     if (!marker) return;
+
+    puntoSeleccionadoActual = marker._datos;
+
+    // REGLA CLAVE: Limpiar cualquier marcador previo y mostrar SOLAMENTE el seleccionado
+    grupoPuntos.clearLayers();
+    grupoPuntos.addLayer(marker);
 
     const lat = parseFloat(marker._datos.latitud);
     const lng = parseFloat(marker._datos.longitud);
@@ -681,7 +697,7 @@ function enfocarPuntoEnMapa(id) {
 
     setTimeout(() => {
         marker.openPopup();
-    }, 800);
+    }, 700);
 
     resaltarTarjetaEnDirectorio(id);
 }
@@ -907,7 +923,10 @@ function configurarEventosUI() {
     if (btnToggleBasemap) btnToggleBasemap.onclick = alternarCapaSatelital;
 
     const btnRecenter = document.getElementById('btn-recenter-ejido');
-    if (btnRecenter) btnRecenter.onclick = centrarEjido;
+    if (btnRecenter) btnRecenter.onclick = () => {
+        volverADirectorio();
+        centrarEjido();
+    };
 
     const btnLocate = document.getElementById('btn-locate-user');
     if (btnLocate) btnLocate.onclick = geolocalizarUsuario;
@@ -921,6 +940,7 @@ function configurarEventosUI() {
     // Listener para eventos de historial del navegador (botón atrás/adelante)
     window.addEventListener('popstate', (e) => {
         if (e.state && e.state.negocioId) {
+            enfocarPuntoEnMapa(e.state.negocioId);
             abrirFichaDetallePorId(e.state.negocioId);
         } else {
             volverADirectorio();
@@ -929,35 +949,11 @@ function configurarEventosUI() {
 }
 
 function filtrarMarcadoresEnMapa() {
-    const textoFiltro = (document.getElementById('gmap-search-input')?.value || '').toLowerCase().trim();
-
-    grupoPuntos.clearLayers();
-
-    marcadoresPuntos.forEach(marker => {
-        const punto = marker._datos;
-
-        let pasaCategoria = true;
-        if (categoriaActiva !== 'todos') {
-            const seccion = SECCIONES_COMERCIALES.find(s => s.id === categoriaActiva);
-            if (seccion) {
-                pasaCategoria = seccion.filtro(punto);
-            }
-        }
-
-        let pasaTexto = true;
-        if (textoFiltro) {
-            pasaTexto = (punto.nombre || '').toLowerCase().includes(textoFiltro) ||
-                        (punto.descripcion || '').toLowerCase().includes(textoFiltro) ||
-                        (punto.subcategoria || '').toLowerCase().includes(textoFiltro) ||
-                        (punto.servicios || '').toLowerCase().includes(textoFiltro) ||
-                        (punto.direccion || '').toLowerCase().includes(textoFiltro) ||
-                        (punto.referencia || '').toLowerCase().includes(textoFiltro);
-        }
-
-        if (pasaCategoria && pasaTexto) {
-            grupoPuntos.addLayer(marker);
-        }
-    });
+    // Al filtrar o buscar en el directorio, el mapa permanece limpio
+    // a menos que se seleccione expresamente un comercio
+    if (!puntoSeleccionadoActual) {
+        grupoPuntos.clearLayers();
+    }
 }
 
 // ========================================================
