@@ -1,0 +1,1375 @@
+/* ========================================================
+   Directorio Comercial y de Servicios - Ejido Mochis
+   Diseño Cartográfico y UI/UX Moderno y Espacioso
+   Archivo: css/estilos.css
+   ======================================================== */
+
+:root {
+    --gm-blue: #1a73e8;
+    --gm-blue-hover: #1557b0;
+    --gm-blue-light: #e8f0fe;
+    
+    --gm-red: #d93025;
+    --gm-red-light: #fce8e6;
+    
+    --gm-amber: #b06000;
+    --gm-amber-light: #fef7e0;
+    
+    --gm-green: #137333;
+    --gm-green-light: #e6f4ea;
+    
+    --gm-purple: #7627bb;
+    --gm-purple-light: #f3e8fd;
+    
+    --gm-gray-dark: #3c4043;
+    --gm-gray-light: #f1f3f4;
+    
+    --gm-surface: #ffffff;
+    --gm-bg: #f8f9fa;
+    --gm-text-main: #202124;
+    --gm-text-sub: #5f6368;
+    --gm-text-muted: #80868b;
+    --gm-border: #dadce0;
+    --gm-divider: #e8eaed;
+    --gm-hover: #f1f3f4;
+    
+    /* Sombras modernas suaves */
+    --shadow-drawer: 0 4px 24px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+    --shadow-card: 0 1px 3px rgba(60, 64, 67, 0.08), 0 1px 2px rgba(60, 64, 67, 0.04);
+    --shadow-card-hover: 0 4px 12px rgba(60, 64, 67, 0.12), 0 2px 4px rgba(60, 64, 67, 0.06);
+    --shadow-floating: 0 2px 8px rgba(60, 64, 67, 0.18), 0 1px 2px rgba(60, 64, 67, 0.1);
+    
+    --radius-pill: 30px;
+    --radius-card: 14px;
+    --radius-drawer: 16px;
+    --radius-btn: 10px;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+html, body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    font-family: 'Inter', 'Roboto', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background-color: #f1f3f4;
+    color: var(--gm-text-main);
+    -webkit-font-smoothing: antialiased;
+}
+
+/* ========================================================
+   1. MAPA LEAFLET A PANTALLA COMPLETA
+   ======================================================== */
+#map {
+    width: 100vw;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+}
+
+.leaflet-control-attribution {
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(6px);
+    font-size: 11px !important;
+    color: var(--gm-text-sub) !important;
+    padding: 3px 8px !important;
+    border-radius: 6px !important;
+    margin: 8px !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ========================================================
+   2. BOTÓN FLOTANTE PARA REABRIR PANEL
+   ======================================================== */
+.btn-floating-open-drawer {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    z-index: 1060;
+    background: #ffffff;
+    border: 1px solid var(--gm-border);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-floating);
+    padding: 10px 18px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gm-blue);
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+}
+
+.btn-floating-open-drawer:hover {
+    background: var(--gm-blue-light);
+    box-shadow: 0 4px 14px rgba(26, 115, 232, 0.25);
+    transform: translateY(-1px);
+}
+
+/* ========================================================
+   3. PANEL LATERAL (DRAWER ESCRITORIO & BOTTOM SHEET MÓVIL)
+   ======================================================== */
+.places-drawer {
+    position: absolute;
+    top: 14px;
+    left: 14px;
+    bottom: 14px;
+    width: 420px;
+    max-width: calc(100vw - 28px);
+    background: var(--gm-surface);
+    z-index: 1050;
+    border-radius: var(--radius-drawer);
+    box-shadow: var(--shadow-drawer);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transform: translateX(0);
+    transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.places-drawer.collapsed {
+    transform: translateX(-450px);
+}
+
+/* Jalador táctil superior para móvil (Bottom Sheet Handle) */
+.drawer-drag-handle {
+    display: none;
+    width: 100%;
+    padding: 10px 0 6px 0;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    user-select: none;
+    background: #ffffff;
+}
+
+.drag-bar {
+    width: 44px;
+    height: 5px;
+    border-radius: 4px;
+    background: #d1d5db;
+    transition: background 0.2s;
+}
+
+.drawer-drag-handle:hover .drag-bar {
+    background: #9ca3af;
+}
+
+/* Vistas interiores del Drawer */
+.drawer-main-view {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.drawer-header-fixed {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 16px 18px 14px 18px;
+    background: #ffffff;
+    border-bottom: 1px solid var(--gm-divider);
+    flex-shrink: 0;
+}
+
+/* Barra de búsqueda estilo Google Maps */
+.search-box-card {
+    display: flex;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid var(--gm-border);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 1px 4px rgba(60, 64, 67, 0.08);
+    height: 46px;
+    padding: 0 6px 0 12px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.search-box-card:focus-within {
+    border-color: var(--gm-blue);
+    box-shadow: 0 1px 6px rgba(26, 115, 232, 0.28);
+}
+
+.btn-menu-drawer {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gm-text-sub);
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+.btn-menu-drawer:hover {
+    background: var(--gm-hover);
+    color: var(--gm-text-main);
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--gm-text-main);
+    padding: 0 10px;
+    background: transparent;
+}
+
+.search-input::placeholder {
+    color: var(--gm-text-muted);
+}
+
+.search-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.btn-icon-action {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gm-text-sub);
+    transition: all 0.15s ease;
+}
+
+.btn-icon-action:hover {
+    background: var(--gm-hover);
+    color: var(--gm-blue);
+}
+
+.search-divider {
+    width: 1px;
+    height: 20px;
+    background: var(--gm-divider);
+    margin: 0 4px;
+}
+
+.btn-directions {
+    color: var(--gm-blue);
+}
+
+/* ========================================================
+   4. CHIPS DE CATEGORÍAS CON ICONOGRAFÍA SVG
+   ======================================================== */
+.category-chips-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.category-chips-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    scroll-behavior: smooth;
+    padding: 4px 2px;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.category-chips-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.btn-chip-scroll {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid var(--gm-border);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 10;
+    color: var(--gm-text-sub);
+    transition: all 0.15s;
+}
+
+.btn-chip-scroll:hover {
+    background: var(--gm-hover);
+    color: var(--gm-text-main);
+}
+
+.btn-chip-scroll-left { left: -6px; }
+.btn-chip-scroll-right { right: -6px; }
+
+.category-chip {
+    background: #ffffff;
+    border: 1px solid var(--gm-border);
+    border-radius: var(--radius-pill);
+    padding: 7px 14px;
+    font-size: 13px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--gm-text-sub);
+    cursor: pointer;
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.category-chip svg {
+    flex-shrink: 0;
+    stroke: currentColor;
+}
+
+.category-chip:hover {
+    background: var(--gm-hover);
+    border-color: #bdc1c6;
+    color: var(--gm-text-main);
+}
+
+.category-chip.active {
+    background: var(--gm-blue);
+    color: #ffffff;
+    border-color: var(--gm-blue);
+    box-shadow: 0 1px 4px rgba(26, 115, 232, 0.3);
+}
+
+.category-chip.active svg {
+    stroke: #ffffff;
+}
+
+/* Fila de título y contador */
+.drawer-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 2px;
+}
+
+.drawer-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--gm-text-main);
+    letter-spacing: -0.2px;
+}
+
+.drawer-subtitle {
+    font-size: 12px;
+    color: var(--gm-text-sub);
+    margin-top: 2px;
+}
+
+.badge-tag-ejido {
+    background: var(--gm-blue-light);
+    color: var(--gm-blue);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 14px;
+    white-space: nowrap;
+}
+
+/* Contenedor scrolleable del directorio */
+.drawer-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 14px 16px 24px 16px;
+    scroll-behavior: smooth;
+}
+
+/* ========================================================
+   5. ACORDEONES POR SECCIÓN COMERCIAL
+   ======================================================== */
+.commercial-section {
+    margin-bottom: 14px;
+    border: 1px solid var(--gm-divider);
+    border-radius: var(--radius-card);
+    background: #ffffff;
+    overflow: hidden;
+    transition: box-shadow 0.2s, border-color 0.2s;
+}
+
+.commercial-section:hover {
+    border-color: #d1d5db;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.section-accordion-header {
+    padding: 13px 16px;
+    background: #fbfbfc;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    user-select: none;
+    border-bottom: 1px solid transparent;
+    transition: background 0.2s;
+}
+
+.section-accordion-header:hover {
+    background: var(--gm-hover);
+}
+
+.commercial-section.open .section-accordion-header {
+    border-bottom-color: var(--gm-divider);
+    background: #ffffff;
+}
+
+.section-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.section-icon-box {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.section-icon-box svg {
+    stroke: currentColor;
+}
+
+.section-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gm-text-main);
+}
+
+.section-badge-count {
+    background: #f1f3f4;
+    color: var(--gm-gray-dark);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 12px;
+}
+
+.section-chevron {
+    color: var(--gm-text-sub);
+    font-size: 12px;
+    transition: transform 0.25s ease;
+}
+
+.commercial-section.open .section-chevron {
+    transform: rotate(180deg);
+}
+
+.section-cards-list {
+    display: none;
+    padding: 12px;
+    flex-direction: column;
+    gap: 12px;
+    background: #fafafa;
+}
+
+.commercial-section.open .section-cards-list {
+    display: flex;
+}
+
+/* ========================================================
+   6. TARJETAS DE COMERCIOS - ESPACIOSAS Y LEGIBLES
+   ======================================================== */
+.place-card {
+    background: #ffffff;
+    border: 1px solid var(--gm-divider);
+    border-radius: 12px;
+    padding: 16px 18px; /* Estándar cómodo y espacioso */
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: var(--shadow-card);
+}
+
+.place-card:hover {
+    border-color: #bdc1c6;
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-1px);
+}
+
+.place-card.selected {
+    border-color: var(--gm-blue);
+    background: #f8fbff;
+    box-shadow: 0 0 0 1.5px var(--gm-blue), var(--shadow-card-hover);
+}
+
+.place-card-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.place-card-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.place-card-mini-icon {
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.place-card-mini-icon svg {
+    stroke: currentColor;
+}
+
+.place-card-name {
+    font-size: 15.5px;
+    font-weight: 600;
+    color: var(--gm-text-main);
+    line-height: 1.35;
+}
+
+.place-card-tags {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+
+.tag-subcat {
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.tag-open-badge {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gm-green);
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.tag-open-badge::before {
+    content: '';
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--gm-green);
+}
+
+.place-card-address {
+    font-size: 13px;
+    color: var(--gm-gray-dark);
+    display: flex;
+    align-items: flex-start;
+    gap: 7px;
+    line-height: 1.4;
+}
+
+.place-card-address svg {
+    flex-shrink: 0;
+    margin-top: 2px;
+    color: var(--gm-text-sub);
+}
+
+.place-card-desc {
+    font-size: 13px;
+    color: var(--gm-text-sub);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.place-card-services-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.place-mini-service-tag {
+    font-size: 11.5px;
+    color: #4b5563;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    padding: 2px 7px;
+    border-radius: 4px;
+}
+
+.place-card-schedule {
+    font-size: 12.5px;
+    color: var(--gm-text-sub);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.place-card-schedule svg {
+    flex-shrink: 0;
+    color: var(--gm-text-sub);
+}
+
+.place-card-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 4px;
+    padding-top: 10px;
+    border-top: 1px solid var(--gm-divider);
+}
+
+.btn-card-action {
+    background: #ffffff;
+    border: 1px solid var(--gm-border);
+    border-radius: 16px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    font-family: inherit;
+    color: var(--gm-blue);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s ease;
+    text-decoration: none;
+}
+
+.btn-card-action svg {
+    flex-shrink: 0;
+    stroke: currentColor;
+}
+
+.btn-card-action:hover {
+    background: var(--gm-blue-light);
+    border-color: var(--gm-blue);
+}
+
+.btn-card-action.btn-enfocar {
+    color: var(--gm-text-main);
+}
+
+.btn-card-action.btn-enfocar:hover {
+    background: #f1f3f4;
+    border-color: #bdc1c6;
+}
+
+/* ========================================================
+   7. FICHA DE DETALLE DEL LUGAR (PLACE DETAIL SHEET)
+   ======================================================== */
+.place-detail-view {
+    display: none;
+    flex-direction: column;
+    height: 100%;
+    background: #ffffff;
+    overflow-y: auto;
+}
+
+.place-detail-view.active {
+    display: flex;
+}
+
+.detail-header-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--gm-divider);
+    background: #ffffff;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-back-to-list {
+    background: var(--gm-blue-light);
+    border: 1px solid rgba(26, 115, 232, 0.25);
+    cursor: pointer;
+    padding: 8px 16px;
+    border-radius: var(--radius-pill);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--gm-blue);
+    font-size: 13.5px;
+    font-weight: 600;
+    font-family: inherit;
+    transition: all 0.2s ease;
+}
+
+.btn-back-to-list:hover {
+    background: var(--gm-blue);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+}
+
+.btn-close-detail {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gm-text-sub);
+    transition: background 0.2s, color 0.2s;
+}
+
+.btn-close-detail:hover {
+    background: var(--gm-hover);
+    color: var(--gm-text-main);
+}
+
+/* Emblema visual del lugar */
+.detail-hero-banner {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #1a73e8 0%, #1557b0 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.detail-hero-svg-wrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+    color: #ffffff;
+}
+
+.detail-hero-svg-wrap svg {
+    width: 26px;
+    height: 26px;
+    stroke: #ffffff;
+}
+
+.detail-body {
+    padding: 20px 20px 30px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+.detail-place-name {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gm-text-main);
+    line-height: 1.3;
+}
+
+.detail-place-category {
+    font-size: 13.5px;
+    color: var(--gm-text-sub);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.detail-action-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    padding: 4px 0;
+}
+
+.btn-primary-directions {
+    grid-column: span 1;
+    background: var(--gm-blue);
+    color: #ffffff !important;
+    text-decoration: none;
+    border-radius: 12px;
+    padding: 10px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: background 0.2s, transform 0.15s;
+    text-align: center;
+}
+
+.btn-primary-directions:hover {
+    background: var(--gm-blue-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(26, 115, 232, 0.35);
+}
+
+.btn-secondary-action {
+    background: #f8f9fa;
+    border: 1px solid var(--gm-border);
+    color: var(--gm-gray-dark);
+    text-decoration: none;
+    border-radius: 12px;
+    padding: 10px 8px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: all 0.2s;
+    text-align: center;
+}
+
+.btn-secondary-action:hover {
+    background: #eef1f4;
+    border-color: #bdc1c6;
+    color: var(--gm-blue);
+    transform: translateY(-1px);
+}
+
+.btn-secondary-action svg,
+.btn-primary-directions svg {
+    stroke: currentColor;
+}
+
+/* Lista de información detallada */
+.detail-info-list {
+    display: flex;
+    flex-direction: column;
+    border-top: 1px solid var(--gm-divider);
+    padding-top: 14px;
+}
+
+.detail-info-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--gm-divider);
+}
+
+.detail-info-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    background: #f1f3f4;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gm-text-sub);
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.detail-info-icon svg {
+    stroke: currentColor;
+}
+
+.detail-info-content {
+    flex: 1;
+}
+
+.detail-info-content h5 {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gm-text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+}
+
+.detail-info-content p {
+    font-size: 14px;
+    color: var(--gm-text-main);
+    line-height: 1.45;
+}
+
+.detail-highlight-text {
+    font-weight: 600;
+    color: var(--gm-text-main);
+}
+
+.detail-sub-text {
+    font-size: 13px !important;
+    color: var(--gm-text-sub) !important;
+    margin-top: 3px;
+}
+
+.detail-mono-text {
+    font-family: monospace;
+    font-size: 12.5px !important;
+    color: #4b5563 !important;
+}
+
+.detail-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.detail-tag-pill {
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    color: #374151;
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 12px;
+}
+
+.btn-return-footer {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid var(--gm-border);
+    border-radius: 12px;
+    padding: 12px;
+    color: var(--gm-blue);
+    font-size: 14px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: all 0.2s ease;
+    margin-top: 8px;
+}
+
+.btn-return-footer:hover {
+    background: var(--gm-blue-light);
+    border-color: var(--gm-blue);
+}
+
+/* ========================================================
+   8. PINES LEAFLET EN FORMA DE GOTA CON ICONOS VECTORIALES
+   ======================================================== */
+.gmap-leaflet-icon {
+    background: transparent !important;
+    border: none !important;
+}
+
+.gmap-pin-wrap {
+    position: relative;
+    width: 32px;
+    height: 42px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.35));
+}
+
+.gmap-pin-wrap:hover {
+    transform: scale(1.15) translateY(-3px);
+    z-index: 9999 !important;
+}
+
+.gmap-pin-svg {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+.gmap-pin-icon-inner {
+    position: absolute;
+    top: 6px;
+    left: 8px;
+    width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    pointer-events: none;
+}
+
+.gmap-pin-icon-inner svg {
+    width: 15px;
+    height: 15px;
+    stroke: #ffffff;
+    stroke-width: 2.2;
+}
+
+/* Popups Leaflet con diseño limpio y amplio */
+.leaflet-popup-content-wrapper {
+    padding: 0 !important;
+    border-radius: 14px !important;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+    overflow: hidden;
+}
+
+.leaflet-popup-content {
+    margin: 0 !important;
+    width: 280px !important;
+}
+
+.popup-gmap-card {
+    display: flex;
+    flex-direction: column;
+}
+
+.popup-gmap-header {
+    height: 46px;
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: #ffffff;
+}
+
+.popup-category-badge {
+    background: rgba(0, 0, 0, 0.25);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 6px;
+    backdrop-filter: blur(2px);
+}
+
+.popup-gmap-body {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.popup-gmap-title {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--gm-text-main);
+    line-height: 1.3;
+}
+
+.popup-gmap-desc {
+    font-size: 12px;
+    color: var(--gm-text-sub);
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.popup-gmap-schedule {
+    font-size: 12px;
+    color: var(--gm-gray-dark);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 2px;
+}
+
+.popup-gmap-schedule svg {
+    flex-shrink: 0;
+    color: var(--gm-text-sub);
+}
+
+.popup-gmap-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    background: #f8f9fa;
+    border-top: 1px solid var(--gm-divider);
+}
+
+.btn-popup-view-more {
+    font-size: 12px;
+    color: var(--gm-blue);
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    font-family: inherit;
+    padding: 4px 6px;
+    border-radius: 6px;
+    transition: background 0.15s;
+}
+
+.btn-popup-view-more:hover {
+    background: var(--gm-blue-light);
+}
+
+.btn-popup-directions {
+    background: var(--gm-blue);
+    color: #ffffff !important;
+    text-decoration: none;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    transition: background 0.15s;
+}
+
+.btn-popup-directions:hover {
+    background: var(--gm-blue-hover);
+}
+
+.btn-popup-directions svg {
+    stroke: #ffffff;
+}
+
+/* ========================================================
+   9. CONTROLES FLOTANTES Y MARCA DE AGUA
+   ======================================================== */
+.floating-controls-bottom-right {
+    position: absolute;
+    bottom: 24px;
+    right: 20px;
+    z-index: 1040;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+}
+
+.floating-layer-switcher {
+    position: relative;
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+    overflow: hidden;
+    cursor: pointer;
+    border: 2px solid #ffffff;
+    box-shadow: var(--shadow-floating);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.floating-layer-switcher:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+}
+
+.layer-switcher-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.layer-switcher-label {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.65);
+    color: #ffffff;
+    font-size: 10.5px;
+    font-weight: 600;
+    text-align: center;
+    padding: 3px 0;
+    backdrop-filter: blur(2px);
+}
+
+.floating-circle-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: #ffffff;
+    border: 1px solid var(--gm-border);
+    box-shadow: var(--shadow-floating);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: var(--gm-gray-dark);
+    transition: all 0.2s ease;
+}
+
+.floating-circle-btn:hover {
+    background: #f8f9fa;
+    color: var(--gm-blue);
+    transform: translateY(-1px);
+}
+
+.control-pill-group {
+    background: #ffffff;
+    border: 1px solid var(--gm-border);
+    border-radius: var(--radius-pill);
+    box-shadow: var(--shadow-floating);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.btn-zoom {
+    width: 44px;
+    height: 40px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--gm-gray-dark);
+    transition: background 0.15s, color 0.15s;
+}
+
+.btn-zoom:hover {
+    background: var(--gm-hover);
+    color: var(--gm-blue);
+}
+
+.zoom-divider {
+    height: 1px;
+    background: var(--gm-divider);
+    width: 80%;
+    margin: 0 auto;
+}
+
+.ejido-watermark {
+    position: absolute;
+    bottom: 24px;
+    left: 448px;
+    z-index: 1030;
+    background: rgba(255, 255, 255, 0.92);
+    backdrop-filter: blur(8px);
+    border: 1px solid var(--gm-border);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    padding: 6px 14px;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--gm-text-main);
+    pointer-events: none;
+    transition: left 0.3s ease;
+}
+
+/* ========================================================
+   10. TOAST NOTIFICATION ELEGANTE Y FLOTANTE
+   ======================================================== */
+.toast-notification {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: #202124;
+    color: #ffffff;
+    padding: 12px 22px;
+    border-radius: var(--radius-pill);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.28);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 13.5px;
+    font-weight: 500;
+    z-index: 99999;
+    opacity: 0;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+}
+
+.toast-notification.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.toast-notification svg {
+    flex-shrink: 0;
+}
+
+/* ========================================================
+   11. RESPONSIVIDAD Y FORMATO BOTTOM SHEET (MÓVIL)
+   ======================================================== */
+@media (max-width: 768px) {
+    .drawer-drag-handle {
+        display: flex;
+    }
+
+    .places-drawer {
+        top: auto;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100vw;
+        max-width: 100vw;
+        height: 85vh;
+        border-radius: 20px 20px 0 0;
+        box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.15);
+        /* Altura inicial visible cómoda (aprox. 46% - 48%) */
+        transform: translateY(calc(100% - 48vh));
+        transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+
+    .places-drawer.open-mobile,
+    .places-drawer.expanded {
+        transform: translateY(0);
+    }
+
+    .places-drawer.collapsed {
+        transform: translateY(calc(100% - 54px));
+    }
+
+    .btn-floating-open-drawer {
+        display: none !important;
+    }
+
+    .ejido-watermark {
+        left: 12px !important;
+        bottom: calc(48vh + 14px);
+    }
+
+    .floating-controls-bottom-right {
+        bottom: calc(48vh + 14px);
+        right: 12px;
+    }
+
+    .floating-layer-switcher {
+        width: 52px;
+        height: 52px;
+    }
+
+    .floating-circle-btn,
+    .btn-zoom {
+        width: 40px;
+        height: 40px;
+    }
+
+    .detail-action-buttons {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

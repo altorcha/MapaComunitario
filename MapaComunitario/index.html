@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Directorio Comercial y de Servicios | Ejido Mochis</title>
+    
+    <meta name="description" content="Directorio comercial y guía de servicios comunitarios del Ejido Mochis (Ahome, Sinaloa). Encuentra comercios locales, talleres, farmacias, consultorios, tiendas y centros educativos.">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+
+    <!-- Tipografías de Google: Roboto e Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Leaflet CSS vía CDN -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" 
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" 
+          crossorigin="" />
+
+    <!-- Estilos Personalizados Modernos -->
+    <link rel="stylesheet" href="css/estilos.css?v=5.0.1">
+</head>
+<body>
+
+    <!-- Botón flotante para reabrir el panel si se oculta en escritorio -->
+    <button class="btn-floating-open-drawer" id="btn-floating-open-drawer" title="Abrir directorio comercial" aria-label="Abrir directorio comercial">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+        <span>Explorar Directorio</span>
+    </button>
+
+    <!-- PANEL LATERAL / BOTTOM SHEET PRINCIPAL -->
+    <aside class="places-drawer" id="places-drawer" aria-label="Directorio comercial y de servicios">
+        
+        <!-- Jalador táctil superior para móviles (Bottom Sheet Drag Handle) -->
+        <div class="drawer-drag-handle" id="drawer-drag-handle" aria-label="Desplegar o minimizar directorio" role="button" tabindex="0">
+            <div class="drag-bar"></div>
+        </div>
+
+        <!-- VISTA 1: DIRECTORIO COMERCIAL -->
+        <div class="drawer-main-view" id="drawer-main-view">
+            <!-- Encabezado fijo: Barra de búsqueda, Chips de Categoría y Título -->
+            <div class="drawer-header-fixed">
+                <!-- Barra de búsqueda moderna -->
+                <div class="search-box-card" role="search">
+                    <button class="btn-menu-drawer" id="btn-toggle-drawer" title="Ocultar panel" aria-label="Ocultar panel">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <line x1="3" y1="12" x2="21" y2="12"></line>
+                            <line x1="3" y1="6" x2="21" y2="6"></line>
+                            <line x1="3" y1="18" x2="21" y2="18"></line>
+                        </svg>
+                    </button>
+                    
+                    <input type="text" 
+                           id="gmap-search-input" 
+                           class="search-input" 
+                           placeholder="Buscar negocios, talleres, servicios..." 
+                           autocomplete="off" 
+                           aria-label="Buscar negocios en Ejido Mochis">
+
+                    <div class="search-actions">
+                        <button class="btn-icon-action" id="btn-clear-search" style="display: none;" title="Limpiar búsqueda" aria-label="Limpiar búsqueda">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        </button>
+                        <button class="btn-icon-action" id="btn-search-trigger" title="Buscar" aria-label="Buscar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+                        </button>
+                        <div class="search-divider"></div>
+                        <button class="btn-icon-action btn-directions" id="btn-quick-directions" title="Cómo llegar a Ejido Mochis" aria-label="Cómo llegar a Ejido Mochis">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Chips de Categorías Deslizables con iconos SVG -->
+                <div class="category-chips-wrapper">
+                    <button class="btn-chip-scroll btn-chip-scroll-left" id="btn-scroll-chips-left" title="Deslizar a la izquierda" aria-label="Deslizar a la izquierda" style="display: none;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="15 18 9 12 15 6"></polyline>
+                        </svg>
+                    </button>
+                    <nav class="category-chips-scroll" id="category-chips-container" aria-label="Categorías comerciales">
+                        <button class="category-chip active" data-category="todos">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7.01" y2="7"></line></svg>
+                            <span>Todos</span>
+                        </button>
+                        <button class="category-chip" data-category="abarrotes">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"></path><line x1="3" y1="6" x2="21" y2="6"></line><path d="M16 10a4 4 0 0 1-8 0"></path></svg>
+                            <span>Abarrotes</span>
+                        </button>
+                        <button class="category-chip" data-category="comida">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4"></line><line x1="10" y1="1" x2="10" y2="4"></line><line x1="14" y1="1" x2="14" y2="4"></line></svg>
+                            <span>Comida y Restaurantes</span>
+                        </button>
+                        <button class="category-chip" data-category="carniceria">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M3 12h18M3 18h18"></path><rect x="4" y="3" width="16" height="18" rx="2"></rect></svg>
+                            <span>Carnicerías</span>
+                        </button>
+                        <button class="category-chip" data-category="ferreteria">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg>
+                            <span>Ferreterías</span>
+                        </button>
+                        <button class="category-chip" data-category="papeleria">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+                            <span>Papelerías</span>
+                        </button>
+                        <button class="category-chip" data-category="taller">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <span>Talleres</span>
+                        </button>
+                        <button class="category-chip" data-category="salud">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"></path></svg>
+                            <span>Salud y Farmacia</span>
+                        </button>
+                        <button class="category-chip" data-category="educacion">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
+                            <span>Educación</span>
+                        </button>
+                    </nav>
+                    <button class="btn-chip-scroll btn-chip-scroll-right" id="btn-scroll-chips-right" title="Deslizar a la derecha" aria-label="Deslizar a la derecha">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="9 18 15 12 9 6"></polyline>
+                        </svg>
+                    </button>
+                </div>
+
+                <!-- Título y Contador -->
+                <div class="drawer-title-row">
+                    <div>
+                        <h2 class="drawer-title">Directorio Ejido Mochis</h2>
+                        <p class="drawer-subtitle">Comercios, talleres y servicios locales georreferenciados</p>
+                    </div>
+                    <span class="badge-tag-ejido" id="total-count-badge">25 Establecimientos</span>
+                </div>
+            </div>
+
+            <!-- Contenedor scrolleable de secciones -->
+            <div class="drawer-content" id="drawer-sections-container">
+            </div>
+        </div>
+
+        <!-- VISTA 2: FICHA DETALLADA DEL LUGAR -->
+        <div class="place-detail-view" id="place-detail-sheet">
+            <!-- Barra superior con botón de regreso 100% visible -->
+            <div class="detail-header-bar">
+                <button class="btn-back-to-list" id="btn-back-to-directory" title="Volver a la lista de comercios">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Volver al directorio</span>
+                </button>
+                <button class="btn-close-detail" id="btn-close-detail" title="Cerrar ficha y volver" aria-label="Cerrar ficha">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Emblema visual con icono SVG -->
+            <div class="detail-hero-banner" id="detail-hero-icon">
+                <div class="detail-hero-svg-wrap" id="detail-hero-svg-wrap"></div>
+            </div>
+
+            <div class="detail-body">
+                <h3 class="detail-place-name" id="detail-name">-</h3>
+                <div class="detail-place-category" id="detail-category-row">-</div>
+
+                <!-- Botones de Acción Primarios -->
+                <div class="detail-action-buttons">
+                    <a href="#" target="_blank" rel="noopener noreferrer" class="btn-primary-directions" id="detail-btn-directions">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <polygon points="3 11 22 2 13 21 11 13 3 11"></polygon>
+                        </svg>
+                        <span>Cómo llegar</span>
+                    </a>
+                    <a href="#" class="btn-secondary-action btn-call-action" id="detail-btn-call">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                        </svg>
+                        <span>Llamar</span>
+                    </a>
+                    <button class="btn-secondary-action" id="detail-btn-center" title="Enfocar en el mapa">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <line x1="12" y1="8" x2="12" y2="16"></line>
+                            <line x1="8" y1="12" x2="16" y2="12"></line>
+                        </svg>
+                        <span>Ver en mapa</span>
+                    </button>
+                    <button class="btn-secondary-action" id="detail-btn-share" title="Copiar enlace directo">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                            <circle cx="18" cy="5" r="3"></circle>
+                            <circle cx="6" cy="12" r="3"></circle>
+                            <circle cx="18" cy="19" r="3"></circle>
+                            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+                            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+                        </svg>
+                        <span>Compartir</span>
+                    </button>
+                </div>
+
+                <!-- Lista de Información Estructurada -->
+                <div class="detail-info-list">
+                    <div class="detail-info-row">
+                        <div class="detail-info-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                                <circle cx="12" cy="10" r="3"></circle>
+                            </svg>
+                        </div>
+                        <div class="detail-info-content">
+                            <h5>Dirección y Ubicación</h5>
+                            <p id="detail-address" class="detail-highlight-text">-</p>
+                            <p id="detail-reference" class="detail-sub-text">-</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-info-row">
+                        <div class="detail-info-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                            </svg>
+                        </div>
+                        <div class="detail-info-content">
+                            <h5>Teléfono de Contacto</h5>
+                            <p id="detail-phone">-</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-info-row">
+                        <div class="detail-info-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polyline points="12 6 12 12 16 14"></polyline>
+                            </svg>
+                        </div>
+                        <div class="detail-info-content">
+                            <h5>Horario de Atención</h5>
+                            <p id="detail-schedule">-</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-info-row">
+                        <div class="detail-info-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                            </svg>
+                        </div>
+                        <div class="detail-info-content">
+                            <h5>Servicios y Productos Disponibles</h5>
+                            <div id="detail-services-tags" class="detail-tags-container"></div>
+                        </div>
+                    </div>
+
+                    <div class="detail-info-row">
+                        <div class="detail-info-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                        </div>
+                        <div class="detail-info-content">
+                            <h5>Descripción del Establecimiento</h5>
+                            <p id="detail-desc">-</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-info-row">
+                        <div class="detail-info-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                            </svg>
+                        </div>
+                        <div class="detail-info-content">
+                            <h5>Giro y Clasificación Comercial</h5>
+                            <p id="detail-commercial-role">-</p>
+                        </div>
+                    </div>
+
+                    <div class="detail-info-row">
+                        <div class="detail-info-icon">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"></polygon>
+                            </svg>
+                        </div>
+                        <div class="detail-info-content">
+                            <h5>Coordenadas Geográficas</h5>
+                            <p id="detail-location-coords" class="detail-mono-text">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Botón inferior para volver al directorio -->
+                <button class="btn-return-footer" id="btn-return-footer">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="19" y1="12" x2="5" y2="12"></line>
+                        <polyline points="12 19 5 12 12 5"></polyline>
+                    </svg>
+                    <span>Volver a la lista de lugares</span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAPA LEAFLET A PANTALLA COMPLETA -->
+    <main id="map" role="region" aria-label="Mapa interactivo de Ejido Mochis"></main>
+
+    <!-- CONTROLES FLOTANTES EN ESQUINA INFERIOR DERECHA -->
+    <div class="floating-controls-bottom-right">
+        <!-- Conmutador Mapa / Satélite -->
+        <div class="floating-layer-switcher" id="btn-toggle-basemap" title="Alternar Mapa / Satélite" aria-label="Alternar capa satelital" role="button" tabindex="0">
+            <img src="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/16/27532/12920" 
+                 alt="Satélite" 
+                 class="layer-switcher-img" 
+                 id="layer-switcher-preview"
+                 onerror="this.src='https://tile.openstreetmap.org/16/12920/27532.png'">
+            <span class="layer-switcher-label" id="layer-switcher-text">Satélite</span>
+        </div>
+
+        <!-- Mi Ubicación Actual (GPS) -->
+        <button class="floating-circle-btn" id="btn-locate-user" title="Tu ubicación GPS" aria-label="Mostrar mi ubicación actual">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="7"></circle>
+                <line x1="12" y1="1" x2="12" y2="4"></line>
+                <line x1="12" y1="20" x2="12" y2="23"></line>
+                <line x1="1" y1="12" x2="4" y2="12"></line>
+                <line x1="20" y1="12" x2="23" y2="12"></line>
+            </svg>
+        </button>
+
+        <!-- Centrar en Ejido Mochis -->
+        <button class="floating-circle-btn" id="btn-recenter-ejido" title="Centrar en Ejido Mochis" aria-label="Centrar en Ejido Mochis">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 19 21 12 17 5 21 12 2"></polygon>
+            </svg>
+        </button>
+
+        <!-- Zoom (+ / -) -->
+        <div class="control-pill-group zoom-button-group">
+            <button class="btn-zoom" id="btn-zoom-in" title="Acercar mapa" aria-label="Acercar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <div class="zoom-divider"></div>
+            <button class="btn-zoom" id="btn-zoom-out" title="Alejar mapa" aria-label="Alejar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <!-- Marca de Agua Ejido Mochis -->
+    <div class="ejido-watermark">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea4335" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+            <circle cx="12" cy="10" r="3"></circle>
+        </svg>
+        <span>Ejido Mochis, Ahome, Sin.</span>
+    </div>
+
+    <!-- Notificación Flotante Elegante (Toast) -->
+    <div class="toast-notification" id="toast-notification" role="status" aria-live="polite">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#34a853" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12"></polyline>
+        </svg>
+        <span id="toast-message">Enlace copiado al portapapeles</span>
+    </div>
+
+    <!-- Leaflet JS vía CDN -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" 
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" 
+            crossorigin=""></script>
+
+    <!-- Datos Modulares y Respaldo Local -->
+    <script src="js/datos-ejido.js?v=5.0.1"></script>
+
+    <!-- Lógica Cartográfica y Manejo de Interfaz -->
+    <script src="js/mapa.js?v=5.0.1"></script>
+</body>
+</html>
