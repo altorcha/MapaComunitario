@@ -18,18 +18,6 @@ Directorio web interactivo con mapa para encontrar comercios, talleres, farmacia
 
 ---
 
-## Cómo usar el proyecto (XAMPP)
-
-1. **Colocar en servidor**: Copia o vincula la carpeta `MapaComunitario` dentro de `C:\xampp\htdocs\`.
-2. **Iniciar servicios**: Abre el Panel de Control de XAMPP e inicia **Apache** y **MySQL**.
-3. **Cargar la base de datos**:
-   * Entra a [http://localhost/phpmyadmin/](http://localhost/phpmyadmin/), crea una base de datos llamada `mapa_ejido` e importa el archivo `database.sql`.
-   * *O bien*, visita en tu navegador: `http://localhost/MapaComunitario/api/seed_puntos.php` para crearla y poblarla en automático.
-4. **Abrir el mapa**:
-   * Entra en tu navegador a: [http://localhost/MapaComunitario/](http://localhost/MapaComunitario/)
-
----
-
 ## Estructura de archivos
 
 ```text
