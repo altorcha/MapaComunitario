@@ -1,75 +1,56 @@
 # Directorio Comercial y de Servicios - Ejido Mochis
 
-Plataforma cartográfica interactiva y directorio georreferenciado moderno de comercios, talleres, consultorios, centros educativos y servicios comunitarios del **Ejido Mochis (Ahome, Sinaloa)**.
+Directorio web interactivo con mapa para encontrar comercios, talleres, farmacias, tiendas y escuelas en el **Ejido Mochis (Ahome, Sinaloa)**.
 
 ---
 
-## Características Principales
+## Características
 
-* **Mapa Interactivo con Leaflet**: Visualización dinámica de calles y vista satelital de alta resolución (ESRI / OpenStreetMap) sin necesidad de API keys de pago.
-* **Georreferenciación Precisa**: Ubicación exacta y fichas completas de 25 comercios y servicios locales sobre la traza urbana real del Ejido Mochis.
-* **Deep Linking en Web**: Enlace directo para cada negocio (`?negocio=ID`). Al abrirlo o compartirlo, centra el mapa automáticamente en el lugar y despliega su ficha.
-* **Compartir Inteligente y Toast**: Copia limpia de URLs al portapapeles con notificación flotante sutil, sin alertas intrusivas.
-* **Diseño UI/UX Espacioso y Respirable**: Tarjetas cómodas (padding 16px-18px), tipografía jerarquizada y badges diferenciados por categoría comercial.
-* **Experiencia Móvil (Bottom Sheet)**: Panel inferior táctil deslizable con agarrador táctil (*drag handle*) que permite expandir y colapsar suavemente.
-* **Iconografía SVG 100% Vectorial**: Diseño limpio y profesional estilo Material Symbols / Feather Icons sin emojis desaliñados.
-* **Arquitectura Dual (Online / Offline)**: Respaldo modular en `js/datos-ejido.js` con carga instantánea y sincronización asíncrona vía API PHP/PDO con MySQL.
-
----
-
-## Categorías Disponibles
-
-1. **Abarrotes y Minisúper**
-2. **Restaurantes y Comida**
-3. **Carnicerías y Mercados**
-4. **Ferreterías y Construcción**
-5. **Papelerías y Trámites**
-6. **Talleres y Servicios**
-7. **Salud y Farmacia**
-8. **Educación y Servicios Cívicos**
+* **Mapa interactivo**: Explora las calles del Ejido Mochis con vista estándar o satelital (sin APIs de pago).
+* **Ubicaciones bajo demanda**: El mapa inicia limpio; el pin de ubicación aparece únicamente al seleccionar un negocio.
+* **Búsqueda inteligente**:
+  * Funciona con o sin acentos (`avila` encuentra `Ávila`, `mecanico` encuentra `mecánico`).
+  * Busca por nombre, giro comercial o por calle y domicilio (*16 de Septiembre*, *Ávila Camacho*, *Carranza*, etc.).
+  * Al presionar `Enter` en el buscador, enfoca de inmediato el primer resultado coincidente.
+* **Ficha de detalle**: Muestra dirección, teléfono con llamada directa, horarios, servicios y botón *"Cómo llegar"*.
+* **Compartir negocio**: Copia el enlace directo del lugar con notificación flotante elegante en pantalla.
+* **Diseño para celular y computadora**: Panel deslizable (*bottom sheet*) cómodo y espacioso.
 
 ---
 
-## Estructura del Proyecto
+## Cómo usar el proyecto (XAMPP)
 
-```
+1. **Colocar en servidor**: Copia o vincula la carpeta `MapaComunitario` dentro de `C:\xampp\htdocs\`.
+2. **Iniciar servicios**: Abre el Panel de Control de XAMPP e inicia **Apache** y **MySQL**.
+3. **Cargar la base de datos**:
+   * Entra a [http://localhost/phpmyadmin/](http://localhost/phpmyadmin/), crea una base de datos llamada `mapa_ejido` e importa el archivo `database.sql`.
+   * *O bien*, visita en tu navegador: `http://localhost/MapaComunitario/api/seed_puntos.php` para crearla y poblarla en automático.
+4. **Abrir el mapa**:
+   * Entra en tu navegador a: [http://localhost/MapaComunitario/](http://localhost/MapaComunitario/)
+
+---
+
+## Estructura de archivos
+
+```text
 MapaComunitario/
-├── api/
-│   ├── conexion.php       # Conexión limpia a MySQL mediante PDO (utf8mb4)
-│   ├── get_puntos.php     # Endpoint JSON de comercios y servicios
-│   └── seed_puntos.php    # Script de sembrado inicial de datos
+├── index.html          # Interfaz principal del directorio
 ├── css/
-│   └── estilos.css        # Estilos modernos, responsive y bottom sheet
+│   └── estilos.css     # Estilos visuales y diseño adaptable
 ├── js/
-│   ├── datos-ejido.js     # Datos locales maestros y catálogo SVG
-│   └── mapa.js            # Lógica cartográfica, deep linking y UI
-├── database.sql           # Script SQL para importar en phpMyAdmin / MySQL
-├── index.html             # Estructura principal de la interfaz
+│   ├── mapa.js         # Lógica de mapa, filtros y buscador
+│   └── datos-ejido.js  # Datos locales maestros e iconos SVG
+├── api/
+│   ├── conexion.php    # Conexión limpia a MySQL mediante PDO
+│   ├── get_puntos.php  # Endpoint que entrega los lugares en JSON
+│   └── seed_puntos.php # Creador/sembrador de datos en MySQL
+├── database.sql        # Script SQL para importar en phpMyAdmin
 └── README.md
 ```
 
 ---
 
-## Instalación y Puesta en Marcha
-
-### Con XAMPP:
-1. Clona o copia la carpeta `MapaComunitario` dentro de `C:\xampp\htdocs\`.
-2. Inicia los servicios de **Apache** y **MySQL** desde el Panel de Control de XAMPP.
-3. Abre **phpMyAdmin** (`http://localhost/phpmyadmin/`) y crea una base de datos llamada `mapa_ejido`.
-4. Importa el archivo `database.sql` o ejecuta en tu navegador el sembrador:
-   ```
-   http://localhost/MapaComunitario/api/seed_puntos.php
-   ```
-5. Abre la aplicación en tu navegador:
-   ```
-   http://localhost/MapaComunitario/
-   ```
-
----
-
-## Tecnologías Utilizadas
-* **HTML5 / CSS3** (Flexbox, CSS Grid, Variables CSS, Bottom Sheet)
-* **JavaScript Moderno** (ES6+, Leaflet API, History API)
-* **PHP 8+** (PDO, Prepared Statements, JSON UTF-8)
-* **MySQL / MariaDB** (InnoDB, utf8mb4_unicode_ci)
-* **Leaflet JS** & **OpenStreetMap / Esri World Imagery**
+## Tecnologías
+* **Frontend**: HTML5, CSS3, JavaScript (ES6+), Leaflet JS
+* **Backend**: PHP 8+ (PDO con UTF-8)
+* **Base de Datos**: MySQL / MariaDB
